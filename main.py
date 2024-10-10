@@ -72,13 +72,14 @@ def start_minimization():
 
         result, iterations = dichotomy_method(a, b, epsilon, func)  # Run the method
 
+        # Plot the function and minimization process immediately
+        plot_function_and_iterations(a, b, func, iterations, result)
+
+        # After the plot is shown, provide a message about the result
         if stop_flag:  # If stopped early, show partial result
             messagebox.showinfo("Result", f"Process stopped early. Approximate minimum found so far: x = {result:.6f}")
         else:  # If completed, show final result
             messagebox.showinfo("Result", f"The approximate minimum is at x = {result:.6f}")
-
-        # Plot the function and minimization process
-        plot_function_and_iterations(a, b, func, iterations, result)
 
     except Exception as e:
         messagebox.showerror("Error", f"Error during minimization: {e}")
