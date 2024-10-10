@@ -19,12 +19,12 @@ This project implements the **Dichotomy Method** for unconstrained minimization 
 2. **Running the Program**:
    - Clone the repository:
      ```bash
-     git clone https://github.com/your-repo/dichotomy_minimization.git
-     cd dichotomy_minimization
+     git clone https://github.com/hallame/dichotomy_method
+     cd dichotomy_method
      ```
    - Run the Python script:
      ```bash
-     python dichotomy_minimization.py
+     python main.py
      ```
    - Alternatively, if you have the `.exe` file, simply double-click to run the program on a Windows machine. No installation required.
 ## Input Values
