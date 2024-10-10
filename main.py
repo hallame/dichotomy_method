@@ -14,7 +14,7 @@ def dichotomy_method(a, b, epsilon, func):
     iter_data = []
 
     while (b - a) > epsilon:
-        if stop_flag:  # If the process is stopped, exit the loop
+        if stop_flag:  # If the process is stopped, exit the loop and return current result
             break
         m = (a + b) / 2
         x1 = m - delta
@@ -24,7 +24,8 @@ def dichotomy_method(a, b, epsilon, func):
         else:
             a = x1
         iter_data.append((a, b, m))  # Store iteration data for plotting
-    return (a + b) / 2, iter_data
+
+    return (a + b) / 2, iter_data  # Return best estimate so far and iterations
 
 
 # Function to dynamically evaluate the user-entered function
@@ -70,7 +71,11 @@ def start_minimization():
                 return
 
         result, iterations = dichotomy_method(a, b, epsilon, func)  # Run the method
-        messagebox.showinfo("Result", f"The approximate minimum is at x = {result:.6f}")  # Show result
+
+        if stop_flag:  # If stopped early, show partial result
+            messagebox.showinfo("Result", f"Process stopped early. Approximate minimum found so far: x = {result:.6f}")
+        else:  # If completed, show final result
+            messagebox.showinfo("Result", f"The approximate minimum is at x = {result:.6f}")
 
         # Plot the function and minimization process
         plot_function_and_iterations(a, b, func, iterations, result)
