@@ -87,7 +87,6 @@ def start_minimization():
             return
 
         result, iterations = dichotomy_method(a, b, epsilon, func)  # Run the method
-        messagebox.showinfo("Result", f"The approximate minimum is at x = {result:.6f}")  # Show result
 
         # Plot the function and minimization process with animated steps
         plot_function_and_iterations(a, b, func, iterations, result)
@@ -156,7 +155,7 @@ entry_epsilon.grid(row=2, column=1)
 tk.Label(root, text="Function f(x):").grid(row=3, column=0)
 entry_function = tk.Entry(root)
 entry_function.grid(row=3, column=1)
-entry_function.insert(0, "x**2")  # Default example function (parabola)
+entry_function.insert(0, "(x-2)**2 + 1")  # Default function provided earlier
 
 # Button to start the minimization
 start_button = tk.Button(root, text="Start Minimization", command=start_minimization)
