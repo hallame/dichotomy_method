@@ -63,6 +63,17 @@ def warn_if_many_iterations(a, b, epsilon):
     return True
 
 
+# Function to check if interval is too large or epsilon too small
+def check_large_interval_or_small_epsilon(a, b, epsilon):
+    if abs(b - a) > 1e6:  # Large interval threshold
+        messagebox.showwarning("Warning", "The interval is too large, which may cause instability.")
+        return False
+    if epsilon < 1e-10:  # Small epsilon threshold
+        messagebox.showwarning("Warning", "Epsilon is too small, which may cause excessive iterations.")
+        return False
+    return True
+
+
 # Function to start the minimization process
 def start_minimization():
     global stop_flag
@@ -74,6 +85,10 @@ def start_minimization():
         epsilon = float(entry_epsilon.get())  # Get precision
         func_expr = entry_function.get()  # Get the function expression
         func = eval_func(func_expr)  # Create a callable function
+
+        # Check if the interval or epsilon are problematic
+        if not check_large_interval_or_small_epsilon(a, b, epsilon):
+            return
 
         # Check if the function is unimodal
         if not check_unimodality(a, b, func):
