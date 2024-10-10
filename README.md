@@ -75,5 +75,3 @@ Thus, the minimum value is approximately \( f(x) = 0.75 \) at \( x = -1.5 \).
 ![Graphical Output](img/Image2.png)
 
 
-![Final Result Window](img/3.png)
-
