@@ -66,14 +66,14 @@ f(-1.5) = (-1.5)^2 + 3(-1.5) + 3 = 2.25 - 4.5 + 3 = 0.75
 
 Thus, the minimum value is approximately \( f(x) = 0.75 \) at \( x = -1.5 \).
 
-## Screenshots
+### Screenshots
 
-### 1. Initial Input Window
-![Initial Input Window](img/image1.png)
 
-### 2. Graphical Output During Iteration
-![Graphical Output](img/image2.png)
+![Initial Input Window](img/Image1.png)
 
-### 3. Final Result Window
+
+![Graphical Output](img/Image2.png)
+
+
 ![Final Result Window](img/3.png)
 
