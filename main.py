@@ -6,6 +6,7 @@ import numpy as np
 # Global flag to stop the process
 stop_flag = False
 
+
 # Dichotomy method with dynamic graph update
 def dichotomy_method(a, b, epsilon, func_str, ax):
     global stop_flag
@@ -26,13 +27,12 @@ def dichotomy_method(a, b, epsilon, func_str, ax):
     y = [func(xi) for xi in x]
 
     ax.clear()  # Clear previous plots
-    ax.plot(x, y, label="Function", color="blue")  # Plot the function curve
+    ax.plot(x, y, label="Function f(x)", color="blue")  # Plot the function curve
 
     # Adding titles and labels
-    ax.set_title("Dichotomy Method for Unconstrained Minimization", fontsize=14, fontweight='bold')
-    ax.set_xlabel("x", fontsize=12)
-    ax.set_ylabel("f(x)", fontsize=12)
-    ax.grid(True, linestyle='--', alpha=0.7)  # Add grid for better readability
+    ax.set_title("ORMIZ: Dichotomy Method for Unconstrained Minimization")
+    ax.set_xlabel("x")
+    ax.set_ylabel("f(x)")
 
     # Info text to display on the graph
     info_text = ax.text(0.5, 0.9, "", transform=ax.transAxes, ha="center", va="center", fontsize=10)
@@ -54,9 +54,9 @@ def dichotomy_method(a, b, epsilon, func_str, ax):
         iter_data.append((a, b, m))
 
         # Update the graph
-        ax.axvline(x=a, color='red', linestyle='--', alpha=0.5, label='a (left boundary)')  # Update left boundary
-        ax.axvline(x=b, color='green', linestyle='--', alpha=0.5, label='b (right boundary)')  # Update right boundary
-        ax.scatter(m, func(m), color='black')  # Mark the current midpoint
+        ax.axvline(x=a, color='r', linestyle='--', alpha=0.5, label="Left boundary a")  # Update left boundary
+        ax.axvline(x=b, color='g', linestyle='--', alpha=0.5, label="Right boundary b")  # Update right boundary
+        ax.scatter(m, func(m), color='black', label="Current midpoint")  # Mark the current midpoint
 
         # Update info text on the graph
         info_text.set_text(f"Current a: {a:.6f}, b: {b:.6f}, X*: {m:.6f}")
@@ -76,6 +76,7 @@ def dichotomy_method(a, b, epsilon, func_str, ax):
             stop_flag = True
             break
 
+    ax.legend()  # Add legend to the graph
     return (a + b) / 2, iter_data
 
 
@@ -123,42 +124,41 @@ def stop_minimization():
 # GUI with Tkinter
 root = tk.Tk()
 root.title("ORMIZ: Dichotomy Minimization")
-root.geometry("400x300")  # Set a specific size for the window
 
-# Instructions for the user with line breaks
+# Instructions for the user
 instructions = (
     "Enter the lower bound (a), upper bound (b),\n"
     "precision (epsilon), and the function to minimize."
 )
-tk.Label(root, text=instructions, font=("Arial", 12)).grid(row=0, column=0, columnspan=2, pady=10)
+tk.Label(root, text=instructions).grid(row=0, column=0, columnspan=2)
 
 # Entry for the lower bound a
-tk.Label(root, text="Lower bound a:", font=("Arial", 10)).grid(row=1, column=0, padx=10, pady=5)
+tk.Label(root, text="Lower bound a:").grid(row=1, column=0)
 entry_a = tk.Entry(root)
-entry_a.grid(row=1, column=1, padx=10, pady=5)
+entry_a.grid(row=1, column=1)
 
 # Entry for the upper bound b
-tk.Label(root, text="Upper bound b:", font=("Arial", 10)).grid(row=2, column=0, padx=10, pady=5)
+tk.Label(root, text="Upper bound b:").grid(row=2, column=0)
 entry_b = tk.Entry(root)
-entry_b.grid(row=2, column=1, padx=10, pady=5)
+entry_b.grid(row=2, column=1)
 
 # Entry for the precision epsilon
-tk.Label(root, text="Precision epsilon:", font=("Arial", 10)).grid(row=3, column=0, padx=10, pady=5)
+tk.Label(root, text="Precision epsilon:").grid(row=3, column=0)
 entry_epsilon = tk.Entry(root)
-entry_epsilon.grid(row=3, column=1, padx=10, pady=5)
+entry_epsilon.grid(row=3, column=1)
 
 # Entry for the function to minimize
-tk.Label(root, text="Function to minimize (in terms of x):", font=("Arial", 10)).grid(row=4, column=0, padx=10, pady=5)
+tk.Label(root, text="Function to minimize (in terms of x):").grid(row=4, column=0)
 entry_function = tk.Entry(root)
-entry_function.grid(row=4, column=1, padx=10, pady=5)
+entry_function.grid(row=4, column=1)
 entry_function.insert(0, "x**2 + 3*x + 3")  # Default function
 
 # Button to start minimization
-start_button = tk.Button(root, text="Start Minimization", command=start_minimization, bg="lightgreen")
-start_button.grid(row=5, column=0, columnspan=2, pady=10)
+start_button = tk.Button(root, text="Start Minimization", command=start_minimization)
+start_button.grid(row=5, column=0, columnspan=2)
 
 # Button to stop the process
-stop_button = tk.Button(root, text="Stop", command=stop_minimization, bg="salmon")
-stop_button.grid(row=6, column=0, columnspan=2, pady=10)
+stop_button = tk.Button(root, text="Stop", command=stop_minimization)
+stop_button.grid(row=6, column=0, columnspan=2)
 
 root.mainloop()
