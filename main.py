@@ -2,109 +2,113 @@ import tkinter as tk
 from tkinter import messagebox
 import matplotlib.pyplot as plt
 import numpy as np
-import time
 
-# Global variable for the "Stop" button
+# Global flag to stop the process
 stop_flag = False
 
 
-# Dichotomy method for minimization with stop option
-def dichotomy_method(a, b, epsilon, func):
+# Dichotomy method with dynamic graph update
+def dichotomy_method(a, b, epsilon, func_str, ax):
     global stop_flag
-    delta = 1e-4 * (b - a)  # Set delta to a small value relative to the interval
+    delta = 1e-4 * (b - a)
     iter_data = []
+    iteration_count = 0
+    max_iterations = 100  # Limit for long runs
+
+    # Convert the function string to a lambda function
+    try:
+        func = eval(f"lambda x: {func_str}")
+    except Exception as e:
+        messagebox.showerror("Function Error", f"Invalid function: {e}")
+        return
+
+    # Prepare the graph
+    x = np.linspace(a, b, 500)
+    y = [func(xi) for xi in x]
+
+    ax.clear()  # Clear previous plots
+    ax.plot(x, y, label="Function", color="blue")  # Plot the function curve
+
+    # Adding titles and labels
+    ax.set_title("Dichotomy Method for Unconstrained Minimization")
+    ax.set_xlabel("x")
+    ax.set_ylabel("f(x)")
+
+    # Info text to display on the graph
+    info_text = ax.text(0.5, 0.9, "", transform=ax.transAxes, ha="center", va="center", fontsize=10)
 
     while (b - a) > epsilon:
-        if stop_flag:  # If the process is stopped, exit the loop
+        if stop_flag:  # Stop condition
             break
+
         m = (a + b) / 2
         x1 = m - delta
         x2 = m + delta
+
+        # Dichotomy decision
         if func(x1) < func(x2):
             b = x2
         else:
             a = x1
-        iter_data.append((a, b, m))  # Store iteration data for plotting
+
+        iter_data.append((a, b, m))
+
+        # Update the graph
+        ax.axvline(x=a, color='r', linestyle='--', alpha=0.5)  # Update left boundary
+        ax.axvline(x=b, color='g', linestyle='--', alpha=0.5)  # Update right boundary
+        ax.scatter(m, func(m), color='black')  # Mark the current midpoint
+
+        # Update info text on the graph
+        info_text.set_text(f"Current a: {a:.6f}, b: {b:.6f}, X*: {m:.6f}")
+
+        plt.pause(0.1)
+
+        # Check periodically to update the GUI and avoid freezing
+        root.update_idletasks()
+
+        iteration_count += 1
+        if iteration_count % 100 == 0:
+            root.update_idletasks()  # Allow the GUI to update
+
+        if iteration_count > max_iterations:
+            messagebox.showwarning("Warning",
+                                   "The number of iterations is very high. Consider increasing epsilon or reducing the interval.")
+            stop_flag = True
+            break
+
     return (a + b) / 2, iter_data
 
 
-# Function to dynamically evaluate the user-entered function
-def eval_func(expr):
-    def func(x):
-        return eval(expr, {"x": x, "np": np})  # Allow use of numpy functions in the expression
-
-    return func
-
-
-# Function to check if the function is likely unimodal
-def check_unimodality(a, b, func):
-    x_vals = np.linspace(a, b, 100)  # 100 points between a and b
-    f_vals = np.array([func(x) for x in x_vals])
-
-    # Check for a single minimum (detect the index where the minimum occurs)
-    min_index = np.argmin(f_vals)
-
-    # If the function decreases before the minimum and increases after it, it's likely unimodal
-    if np.all(np.diff(f_vals[:min_index]) < 0) and np.all(np.diff(f_vals[min_index:]) > 0):
-        return True
-    else:
-        return False
-
-
-# Function to warn if the number of iterations could be high
-def warn_if_many_iterations(a, b, epsilon):
-    iterations_estimate = np.log2((b - a) / epsilon)
-    if iterations_estimate > 50:
-        return messagebox.askyesno(
-            "Warning",
-            f"The estimated number of iterations is {int(iterations_estimate)}. "
-            "This may take a long time. Do you want to continue?"
-        )
-    return True
-
-
-# Function to check if interval is too large or epsilon too small
-def check_large_interval_or_small_epsilon(a, b, epsilon):
-    if abs(b - a) > 1e6:  # Large interval threshold
-        messagebox.showwarning("Warning", "The interval is too large, which may cause instability.")
-        return False
-    if epsilon < 1e-10:  # Small epsilon threshold
-        messagebox.showwarning("Warning", "Epsilon is too small, which may cause excessive iterations.")
-        return False
-    return True
-
-
-# Function to start the minimization process
+# Function to start the minimization
 def start_minimization():
     global stop_flag
     stop_flag = False  # Reset stop flag
 
     try:
-        a = float(entry_a.get())  # Get lower bound
-        b = float(entry_b.get())  # Get upper bound
-        epsilon = float(entry_epsilon.get())  # Get precision
-        func_expr = entry_function.get()  # Get the function expression
-        func = eval_func(func_expr)  # Create a callable function
+        # Get input values
+        a = float(entry_a.get())  # Lower bound
+        b = float(entry_b.get())  # Upper bound
+        epsilon = float(entry_epsilon.get())  # Precision
+        func_str = entry_function.get()  # Function to minimize (as string)
 
-        # Check if the interval or epsilon are problematic
-        if not check_large_interval_or_small_epsilon(a, b, epsilon):
+        # Validating input
+        if a >= b:
+            messagebox.showerror("Input Error", "Lower bound 'a' must be less than upper bound 'b'.")
+            return
+        if epsilon <= 0:
+            messagebox.showerror("Input Error", "Epsilon must be a positive number.")
             return
 
-        # Check if the function is unimodal
-        if not check_unimodality(a, b, func):
-            response = messagebox.askyesno("Warning",
-                                           "The function does not appear to be unimodal. Do you want to proceed anyway?")
-            if not response:
-                return
+        fig, ax = plt.subplots()  # Create a figure for the plot
 
-        # Warn the user if the number of iterations could be large
-        if not warn_if_many_iterations(a, b, epsilon):
-            return
+        # Run the dichotomy method with live updates
+        result, iterations = dichotomy_method(a, b, epsilon, func_str, ax)
 
-        result, iterations = dichotomy_method(a, b, epsilon, func)  # Run the method
-
-        # Plot the function and minimization process with animated steps
-        plot_function_and_iterations(a, b, func, iterations, result)
+        # Show the final result
+        if stop_flag:
+            messagebox.showinfo("Result", f"Process stopped early. Approximate minimum: x = {result:.6f}")
+        else:
+            messagebox.showinfo("Result", f"The approximate minimum is at x = {result:.6f}")
 
     except Exception as e:
         messagebox.showerror("Error", f"Error during minimization: {e}")
@@ -113,71 +117,48 @@ def start_minimization():
 # Function to stop the minimization
 def stop_minimization():
     global stop_flag
-    stop_flag = True  # Trigger the stop of the process
-
-
-# Function to plot the function and the minimization process with animation
-def plot_function_and_iterations(a, b, func, iterations, result):
-    x = np.linspace(a, b, 500)
-    y = [func(xi) for xi in x]
-
-    plt.ion()  # Enable interactive mode
-    fig, ax = plt.subplots()
-    ax.plot(x, y, label="Function")
-
-    # Plot the intervals for each iteration, with a slight delay to simulate animation
-    for i, (ai, bi, mi) in enumerate(iterations):
-        if stop_flag:
-            break  # Stop plotting if minimization is stopped
-
-        # Plot the lines and midpoint, without excessive annotation
-        ax.axvline(x=ai, color='r', linestyle='--', alpha=0.5)
-        ax.axvline(x=bi, color='g', linestyle='--', alpha=0.5)
-        ax.scatter(mi, func(mi), color='black')
-
-        ax.set_title(f"Iteration {i + 1}: Interval [{ai:.6f}, {bi:.6f}]")
-        plt.pause(0.5)  # Pause for 0.5 seconds to simulate a slower update
-        plt.draw()
-
-    # Final annotation of the result
-    ax.scatter(result, func(result), color='blue', s=100, label=f"Approx. Minimum x = {result:.6f}")
-    ax.set_title(f"Final Result: Approx. Minimum at x = {result:.6f}")
-    ax.legend()
-    plt.ioff()  # Turn off interactive mode
-    plt.show()
+    stop_flag = True
 
 
 # GUI with Tkinter
 root = tk.Tk()
 root.title("Dichotomy Minimization")
 
+# Instructions for the user
+# Instructions for the user with line breaks
+instructions = (
+    "Enter the lower bound (a), upper bound (b),\n"
+    "precision (epsilon), and the function to minimize."
+)
+tk.Label(root, text=instructions).grid(row=0, column=0, columnspan=2)
+
 # Entry for the lower bound a
-tk.Label(root, text="Lower bound a:").grid(row=0, column=0)
+tk.Label(root, text="Lower bound a:").grid(row=1, column=0)
 entry_a = tk.Entry(root)
-entry_a.grid(row=0, column=1)
+entry_a.grid(row=1, column=1)
 
 # Entry for the upper bound b
-tk.Label(root, text="Upper bound b:").grid(row=1, column=0)
+tk.Label(root, text="Upper bound b:").grid(row=2, column=0)
 entry_b = tk.Entry(root)
-entry_b.grid(row=1, column=1)
+entry_b.grid(row=2, column=1)
 
 # Entry for the precision epsilon
-tk.Label(root, text="Precision epsilon:").grid(row=2, column=0)
+tk.Label(root, text="Precision epsilon:").grid(row=3, column=0)
 entry_epsilon = tk.Entry(root)
-entry_epsilon.grid(row=2, column=1)
+entry_epsilon.grid(row=3, column=1)
 
 # Entry for the function to minimize
-tk.Label(root, text="Function f(x):").grid(row=3, column=0)
+tk.Label(root, text="Function to minimize (in terms of x):").grid(row=4, column=0)
 entry_function = tk.Entry(root)
-entry_function.grid(row=3, column=1)
-entry_function.insert(0, "(x-2)**2 + 1")  # Default function provided earlier
+entry_function.grid(row=4, column=1)
+entry_function.insert(0, "x**2 + 3*x + 3")  # Default function
 
-# Button to start the minimization
+# Button to start minimization
 start_button = tk.Button(root, text="Start Minimization", command=start_minimization)
-start_button.grid(row=4, column=0, columnspan=2)
+start_button.grid(row=5, column=0, columnspan=2)
 
-# Button to stop the minimization
+# Button to stop the process
 stop_button = tk.Button(root, text="Stop", command=stop_minimization)
-stop_button.grid(row=5, column=0, columnspan=2)
+stop_button.grid(row=6, column=0, columnspan=2)
 
 root.mainloop()
