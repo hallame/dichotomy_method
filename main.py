@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import messagebox
 import matplotlib.pyplot as plt
 import numpy as np
+import time
 
 # Global variable for the "Stop" button
 stop_flag = False
@@ -14,7 +15,7 @@ def dichotomy_method(a, b, epsilon, func):
     iter_data = []
 
     while (b - a) > epsilon:
-        if stop_flag:  # If the process is stopped, exit the loop and return current result
+        if stop_flag:  # If the process is stopped, exit the loop
             break
         m = (a + b) / 2
         x1 = m - delta
@@ -24,8 +25,7 @@ def dichotomy_method(a, b, epsilon, func):
         else:
             a = x1
         iter_data.append((a, b, m))  # Store iteration data for plotting
-
-    return (a + b) / 2, iter_data  # Return best estimate so far and iterations
+    return (a + b) / 2, iter_data
 
 
 # Function to dynamically evaluate the user-entered function
@@ -51,6 +51,18 @@ def check_unimodality(a, b, func):
         return False
 
 
+# Function to warn if the number of iterations could be high
+def warn_if_many_iterations(a, b, epsilon):
+    iterations_estimate = np.log2((b - a) / epsilon)
+    if iterations_estimate > 50:
+        return messagebox.askyesno(
+            "Warning",
+            f"The estimated number of iterations is {int(iterations_estimate)}. "
+            "This may take a long time. Do you want to continue?"
+        )
+    return True
+
+
 # Function to start the minimization process
 def start_minimization():
     global stop_flag
@@ -70,16 +82,15 @@ def start_minimization():
             if not response:
                 return
 
+        # Warn the user if the number of iterations could be large
+        if not warn_if_many_iterations(a, b, epsilon):
+            return
+
         result, iterations = dichotomy_method(a, b, epsilon, func)  # Run the method
+        messagebox.showinfo("Result", f"The approximate minimum is at x = {result:.6f}")  # Show result
 
-        # Plot the function and minimization process immediately
+        # Plot the function and minimization process with animated steps
         plot_function_and_iterations(a, b, func, iterations, result)
-
-        # After the plot is shown, provide a message about the result
-        if stop_flag:  # If stopped early, show partial result
-            messagebox.showinfo("Result", f"Process stopped early. Approximate minimum found so far: x = {result:.6f}")
-        else:  # If completed, show final result
-            messagebox.showinfo("Result", f"The approximate minimum is at x = {result:.6f}")
 
     except Exception as e:
         messagebox.showerror("Error", f"Error during minimization: {e}")
@@ -91,26 +102,34 @@ def stop_minimization():
     stop_flag = True  # Trigger the stop of the process
 
 
-# Function to plot the function and the minimization process
+# Function to plot the function and the minimization process with animation
 def plot_function_and_iterations(a, b, func, iterations, result):
     x = np.linspace(a, b, 500)
     y = [func(xi) for xi in x]
 
-    plt.plot(x, y, label="Function")
+    plt.ion()  # Enable interactive mode
+    fig, ax = plt.subplots()
+    ax.plot(x, y, label="Function")
 
-    # Plot the intervals for each iteration
+    # Plot the intervals for each iteration, with a slight delay to simulate animation
     for i, (ai, bi, mi) in enumerate(iterations):
-        plt.axvline(x=ai, color='r', linestyle='--', alpha=0.5)
-        plt.axvline(x=bi, color='g', linestyle='--', alpha=0.5)
-        plt.scatter(mi, func(mi), color='black', label=f"Iteration {i + 1}" if i == 0 else "")
+        if stop_flag:
+            break  # Stop plotting if minimization is stopped
 
-    # Mark the result on the graph
-    plt.scatter(result, func(result), color='blue', label=f"Minimum (x = {result:.4f})", zorder=5)
+        # Plot the lines and midpoint, without excessive annotation
+        ax.axvline(x=ai, color='r', linestyle='--', alpha=0.5)
+        ax.axvline(x=bi, color='g', linestyle='--', alpha=0.5)
+        ax.scatter(mi, func(mi), color='black')
 
-    plt.title("Dichotomy Minimization Process")
-    plt.xlabel("x")
-    plt.ylabel("f(x)")
-    plt.legend()
+        ax.set_title(f"Iteration {i + 1}: Interval [{ai:.6f}, {bi:.6f}]")
+        plt.pause(0.5)  # Pause for 0.5 seconds to simulate a slower update
+        plt.draw()
+
+    # Final annotation of the result
+    ax.scatter(result, func(result), color='blue', s=100, label=f"Approx. Minimum x = {result:.6f}")
+    ax.set_title(f"Final Result: Approx. Minimum at x = {result:.6f}")
+    ax.legend()
+    plt.ioff()  # Turn off interactive mode
     plt.show()
 
 
