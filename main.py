@@ -35,6 +35,21 @@ def eval_func(expr):
     return func
 
 
+# Function to check if the function is likely unimodal
+def check_unimodality(a, b, func):
+    x_vals = np.linspace(a, b, 100)  # 100 points between a and b
+    f_vals = np.array([func(x) for x in x_vals])
+
+    # Check for a single minimum (detect the index where the minimum occurs)
+    min_index = np.argmin(f_vals)
+
+    # If the function decreases before the minimum and increases after it, it's likely unimodal
+    if np.all(np.diff(f_vals[:min_index]) < 0) and np.all(np.diff(f_vals[min_index:]) > 0):
+        return True
+    else:
+        return False
+
+
 # Function to start the minimization process
 def start_minimization():
     global stop_flag
@@ -47,11 +62,18 @@ def start_minimization():
         func_expr = entry_function.get()  # Get the function expression
         func = eval_func(func_expr)  # Create a callable function
 
+        # Check if the function is unimodal
+        if not check_unimodality(a, b, func):
+            response = messagebox.askyesno("Warning",
+                                           "The function does not appear to be unimodal. Do you want to proceed anyway?")
+            if not response:
+                return
+
         result, iterations = dichotomy_method(a, b, epsilon, func)  # Run the method
         messagebox.showinfo("Result", f"The approximate minimum is at x = {result:.6f}")  # Show result
 
         # Plot the function and minimization process
-        plot_function_and_iterations(a, b, func, iterations)
+        plot_function_and_iterations(a, b, func, iterations, result)
 
     except Exception as e:
         messagebox.showerror("Error", f"Error during minimization: {e}")
@@ -64,7 +86,7 @@ def stop_minimization():
 
 
 # Function to plot the function and the minimization process
-def plot_function_and_iterations(a, b, func, iterations):
+def plot_function_and_iterations(a, b, func, iterations, result):
     x = np.linspace(a, b, 500)
     y = [func(xi) for xi in x]
 
@@ -74,7 +96,10 @@ def plot_function_and_iterations(a, b, func, iterations):
     for i, (ai, bi, mi) in enumerate(iterations):
         plt.axvline(x=ai, color='r', linestyle='--', alpha=0.5)
         plt.axvline(x=bi, color='g', linestyle='--', alpha=0.5)
-        plt.scatter(mi, func(mi), color='black')
+        plt.scatter(mi, func(mi), color='black', label=f"Iteration {i + 1}" if i == 0 else "")
+
+    # Mark the result on the graph
+    plt.scatter(result, func(result), color='blue', label=f"Minimum (x = {result:.4f})", zorder=5)
 
     plt.title("Dichotomy Minimization Process")
     plt.xlabel("x")
